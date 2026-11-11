@@ -1,0 +1,1190 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Las ondas que mueven nuestro mundo · Mapa mental interactivo</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#040814; --ink:#e8f1ff; --muted:#93a7c8; --glass:rgba(10,20,46,.66);
+  --line:rgba(150,190,255,.18); --accent:#5eead4;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;overflow:hidden;background:var(--bg);color:var(--ink);
+  font-family:'Outfit',system-ui,-apple-system,'Segoe UI',sans-serif}
+button{font:inherit;color:inherit;cursor:pointer}
+#c{position:fixed;inset:0;width:100%;height:100%;display:block}
+#viewport{position:fixed;inset:0;cursor:grab;touch-action:none}
+#viewport.dragging{cursor:grabbing}
+#world{position:absolute;left:50%;top:50%;width:0;height:0;transform-origin:0 0}
+
+/* ---------- nodos ---------- */
+.node{position:absolute;left:0;top:0;will-change:transform,opacity;user-select:none;cursor:pointer}
+.bubble{position:relative;border-radius:50%;display:flex;flex-direction:column;align-items:center;justify-content:center;
+  text-align:center;transition:transform .35s cubic-bezier(.2,1.6,.4,1),box-shadow .3s;
+  background:radial-gradient(circle at 35% 30%,color-mix(in srgb,var(--c) 28%,#0a1430),#081026 70%);
+  border:1.5px solid color-mix(in srgb,var(--c) 70%,transparent);
+  box-shadow:0 0 28px color-mix(in srgb,var(--c) 35%,transparent),inset 0 0 22px color-mix(in srgb,var(--c) 18%,transparent)}
+.bubble::before,.bubble::after{content:"";position:absolute;inset:-2px;border-radius:50%;
+  border:1.5px solid var(--c);opacity:0;animation:ring 3.2s ease-out infinite;pointer-events:none}
+.bubble::after{animation-delay:1.6s}
+@keyframes ring{0%{transform:scale(1);opacity:.55}100%{transform:scale(1.85);opacity:0}}
+.node:hover .bubble{transform:scale(1.09)}
+.node.open .bubble{box-shadow:0 0 60px color-mix(in srgb,var(--c) 60%,transparent),inset 0 0 30px color-mix(in srgb,var(--c) 30%,transparent)}
+.main .bubble{width:148px;height:148px;padding:14px}
+.main .ic{line-height:0;margin-bottom:8px;filter:drop-shadow(0 0 6px var(--c))}
+.main .lb{font-size:14.5px;font-weight:600;line-height:1.15}
+.main .ck{position:absolute;top:6px;right:10px;font-size:13px;color:var(--c);opacity:0;transition:.3s}
+.main.visited .ck{opacity:1}
+.center .bubble{width:232px;height:232px;padding:22px;--c:#7dd3fc;
+  background:radial-gradient(circle at 38% 28%,#1f4f86 0%,#122a5c 38%,#0a1538 70%,#070d26 100%);
+  border:2px solid #7dd3fc;
+  box-shadow:0 0 0 7px #060b1f,0 0 0 8.5px rgba(125,211,252,.45),0 0 0 16px rgba(6,11,31,.85),0 0 0 17px rgba(196,181,253,.25),
+    0 0 90px rgba(125,211,252,.45),inset 0 0 40px rgba(125,211,252,.25),inset 0 -20px 40px rgba(0,0,0,.45)}
+.center .bubble::before,.center .bubble::after{animation-duration:4s;inset:-18px}
+.center .ic{display:flex;flex-direction:column;align-items:center;gap:4px;font-size:11px;letter-spacing:.3em;text-transform:uppercase;color:#a5f3fc;margin-bottom:8px}
+.center .ic svg.i{width:38px;height:38px;stroke-width:1.9;stroke:#7dd3fc;filter:drop-shadow(0 0 6px #7dd3fc);margin:0}
+.center .lb{font-size:22px;font-weight:800;line-height:1.08;text-shadow:0 2px 12px rgba(0,0,0,.6)}
+svg.i{width:1em;height:1em;vertical-align:-.16em;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round;flex:none}
+.main .ic svg.i{width:40px;height:40px;stroke:var(--c);stroke-width:1.5}
+.pic svg.i{width:30px;height:30px;stroke:var(--pc);stroke-width:1.5}
+.tb{display:inline-flex;align-items:center;gap:6px}
+.tb svg.i{width:16px;height:16px}
+.big{display:flex;align-items:center;justify-content:center;gap:8px}
+.big svg.i{width:18px;height:18px}
+.med .m .e svg.i{width:26px;height:26px;stroke:var(--pc)}
+#brand b{display:flex;align-items:center;gap:8px}
+#brand b svg.i{width:22px;height:22px;stroke:#5eead4}
+.status::before{content:"";display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--sc,#fff);margin-right:8px;vertical-align:1px;box-shadow:0 0 8px var(--sc,#fff)}
+.center svg{width:130px;height:22px;margin-top:8px;overflow:hidden}
+.center svg path{fill:none;stroke:#5eead4;stroke-width:2.2;stroke-linecap:round;animation:slide 2s linear infinite}
+@keyframes slide{to{transform:translateX(-40px)}}
+.child .pill{display:block;width:max-content;max-width:190px;padding:9px 15px;border-radius:999px;font-size:13.5px;line-height:1.2;
+  background:rgba(8,16,38,.82);border:1px solid color-mix(in srgb,var(--c) 60%,transparent);
+  box-shadow:0 0 18px color-mix(in srgb,var(--c) 25%,transparent);text-align:center;transition:transform .3s,background .3s;backdrop-filter:blur(4px)}
+.child:hover .pill{transform:scale(1.07);background:color-mix(in srgb,var(--c) 22%,rgba(8,16,38,.9))}
+
+/* ---------- HUD ---------- */
+.hud{position:fixed;z-index:5;display:flex;gap:8px;align-items:center}
+#brand{top:16px;left:18px;flex-direction:column;align-items:flex-start;gap:2px;pointer-events:none}
+#brand b{font-size:18px;font-weight:800;letter-spacing:.02em}
+#brand span{font-size:12.5px;color:var(--muted)}
+#tools{top:14px;right:16px}
+.tb{background:var(--glass);border:1px solid var(--line);border-radius:12px;padding:8px 12px;font-size:13.5px;
+  backdrop-filter:blur(10px);transition:.2s;white-space:nowrap}
+.tb:hover{border-color:var(--accent);background:rgba(20,40,80,.8)}
+.tb.on{border-color:var(--accent);color:var(--accent);box-shadow:0 0 14px rgba(94,234,212,.35)}
+#progress{left:18px;bottom:16px;background:var(--glass);border:1px solid var(--line);border-radius:14px;padding:9px 14px;
+  backdrop-filter:blur(10px);font-size:13px;gap:10px}
+#progress .bar{width:120px;height:6px;border-radius:9px;background:rgba(255,255,255,.1);overflow:hidden}
+#progress .bar i{display:block;height:100%;width:0;background:linear-gradient(90deg,#5eead4,#c4b5fd,#f472b6);transition:width .6s}
+#hint{position:fixed;z-index:4;bottom:18px;left:50%;transform:translateX(-50%);font-size:12.5px;color:var(--muted);
+  background:rgba(4,8,20,.5);padding:6px 14px;border-radius:99px;pointer-events:none;transition:opacity .6s}
+
+/* ---------- panel ---------- */
+#panel{position:fixed;z-index:6;top:14px;right:14px;bottom:14px;width:440px;max-width:calc(100vw - 28px);
+  background:var(--glass);border:1px solid var(--line);border-radius:22px;backdrop-filter:blur(16px);
+  transform:translateX(calc(100% + 30px));transition:transform .55s cubic-bezier(.2,.9,.2,1);overflow:hidden;display:flex;flex-direction:column}
+#panel.open{transform:none}
+#panel .scroll{overflow-y:auto;padding:22px 22px 18px;flex:1;scrollbar-width:thin;scrollbar-color:#334 transparent}
+#panel .x{position:absolute;top:12px;right:12px;width:34px;height:34px;border-radius:50%;border:1px solid var(--line);
+  background:rgba(0,0,0,.25);z-index:2}
+#panel .x:hover{border-color:var(--pc)}
+.ph{display:flex;gap:14px;align-items:center;margin-bottom:16px;padding-right:34px}
+.pic{flex:none;width:58px;height:58px;border-radius:50%;display:grid;place-items:center;font-size:28px;
+  border:1.5px solid var(--pc);box-shadow:0 0 22px color-mix(in srgb,var(--pc) 50%,transparent);
+  background:radial-gradient(circle,color-mix(in srgb,var(--pc) 30%,transparent),transparent)}
+.ph small{font-size:11.5px;letter-spacing:.18em;text-transform:uppercase;color:var(--pc)}
+.ph h2{font-size:23px;line-height:1.1;font-weight:800;margin:2px 0}
+.ph em{font-size:13.5px;color:var(--muted);font-style:normal}
+.pbody p{font-size:14.8px;line-height:1.6;color:#d3def2;margin-bottom:10px}
+.pbody p.hl{border-left:3px solid var(--pc);padding:6px 0 6px 12px;background:linear-gradient(90deg,color-mix(in srgb,var(--pc) 14%,transparent),transparent);border-radius:0 8px 8px 0}
+#panel h3{font-size:12px;letter-spacing:.2em;text-transform:uppercase;color:var(--pc);margin:18px 0 10px;display:flex;align-items:center;gap:8px}
+#panel h3::after{content:"";flex:1;height:1px;background:linear-gradient(90deg,color-mix(in srgb,var(--pc) 50%,transparent),transparent)}
+.keys{list-style:none;display:flex;flex-wrap:wrap;gap:7px}
+.keys li{font-size:13px;padding:6px 11px;border-radius:99px;border:1px solid color-mix(in srgb,var(--pc) 45%,transparent);
+  background:color-mix(in srgb,var(--pc) 8%,transparent);transition:.3s}
+.keys li.flash{background:color-mix(in srgb,var(--pc) 45%,transparent);transform:scale(1.06);box-shadow:0 0 16px var(--pc)}
+.pnav{display:flex;justify-content:space-between;gap:10px;padding:12px 22px;border-top:1px solid var(--line)}
+.pnav button{flex:1;background:rgba(255,255,255,.04);border:1px solid var(--line);border-radius:12px;padding:9px;font-size:13.5px}
+.pnav button:hover{border-color:var(--pc);color:var(--pc)}
+
+/* ---------- widgets ---------- */
+.widget{background:rgba(0,0,0,.25);border:1px solid var(--line);border-radius:16px;padding:12px}
+.widget canvas{display:block;width:100%;border-radius:10px}
+.seg{display:flex;gap:6px;margin-bottom:10px;flex-wrap:wrap}
+.seg button{flex:1;padding:7px 8px;font-size:12.5px;border-radius:10px;border:1px solid var(--line);background:rgba(255,255,255,.03)}
+.seg button.on{border-color:var(--pc);background:color-mix(in srgb,var(--pc) 22%,transparent);color:#fff}
+.widget label{display:flex;align-items:center;gap:10px;font-size:12.5px;color:var(--muted);margin-top:8px}
+.widget label span{width:80px;flex:none}
+input[type=range]{flex:1;accent-color:var(--pc);height:4px}
+.ro{font-size:13px;color:#cfe0ff;margin-top:10px;line-height:1.5}
+.ro b{color:var(--pc)}
+.meter{height:8px;border-radius:9px;background:rgba(255,255,255,.08);overflow:hidden;margin-top:6px}
+.meter i{display:block;height:100%;background:linear-gradient(90deg,#5eead4,#facc15,#f43f5e);transition:width .25s}
+.specbar{display:flex;border-radius:10px;overflow:hidden;margin:10px 0 4px;height:34px}
+.specbar button{flex:1;border:0;font-size:11px;font-weight:600;color:#0b1020;opacity:.55;transition:.2s;padding:0 2px}
+.specbar button.on{opacity:1;transform:scaleY(1.12)}
+.speclegend{display:flex;justify-content:space-between;font-size:11px;color:var(--muted)}
+.card{margin-top:10px;padding:10px 12px;border-radius:12px;background:rgba(255,255,255,.04);border:1px solid var(--line);font-size:13.5px;line-height:1.5}
+.card b{font-size:15px}
+.presets{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+.presets button{font-size:12px;padding:6px 9px;border-radius:9px;border:1px solid var(--line);background:rgba(255,255,255,.03)}
+.presets button:hover,.presets button.on{border-color:var(--pc);color:#fff;background:color-mix(in srgb,var(--pc) 20%,transparent)}
+.status{margin-top:10px;padding:10px 12px;border-radius:12px;font-size:13.5px;line-height:1.45;transition:background .4s,border-color .4s;border:1px solid}
+.big{width:100%;margin-top:10px;padding:10px;border-radius:12px;border:1px solid var(--pc);background:color-mix(in srgb,var(--pc) 15%,transparent);font-weight:600}
+.big:hover{background:color-mix(in srgb,var(--pc) 30%,transparent)}
+.med{display:grid;gap:8px}
+.med .m{display:grid;grid-template-columns:42px 1fr;gap:4px 10px;padding:10px;border-radius:12px;background:rgba(255,255,255,.04);border:1px solid var(--line);transition:.3s}
+.med .m:hover{border-color:var(--pc);transform:translateX(-3px)}
+.med .m .e{grid-row:span 3;font-size:26px;display:grid;place-items:center}
+.med .m b{font-size:14.5px}
+.med .m span{font-size:12.8px;color:#cdd8ee}
+.med .m span i{font-style:normal;color:var(--pc);font-weight:600}
+.pledge{display:flex;gap:10px;align-items:center;padding:8px 10px;border-radius:10px;cursor:pointer;font-size:13.5px;transition:.25s;border:1px solid transparent}
+.pledge:hover{background:rgba(255,255,255,.04)}
+.pledge input{accent-color:#34d399;width:17px;height:17px}
+.pledge.done{border-color:rgba(52,211,153,.4);background:rgba(52,211,153,.08)}
+
+/* ---------- intro ---------- */
+#intro{position:fixed;inset:0;z-index:10;display:grid;place-items:center;text-align:center;
+  background:radial-gradient(circle at 50% 50%,rgba(14,30,70,.75),rgba(2,4,12,.96));transition:opacity 1s,visibility 1s}
+#intro.gone{opacity:0;visibility:hidden}
+#intro .rings{position:absolute;left:50%;top:50%;width:0;height:0}
+#intro .rings i{position:absolute;left:-60px;top:-60px;width:120px;height:120px;border-radius:50%;border:1.5px solid #5eead4;animation:introRing 4s ease-out infinite;opacity:0}
+#intro .rings i:nth-child(2){animation-delay:1s;border-color:#c4b5fd}
+#intro .rings i:nth-child(3){animation-delay:2s;border-color:#f472b6}
+#intro .rings i:nth-child(4){animation-delay:3s;border-color:#facc15}
+@keyframes introRing{0%{transform:scale(.3);opacity:.9}100%{transform:scale(7);opacity:0}}
+#intro .in{position:relative;max-width:640px;padding:20px}
+#intro small{letter-spacing:.35em;text-transform:uppercase;color:#5eead4;font-size:12px}
+#intro h1{font-size:clamp(34px,6vw,62px);font-weight:800;line-height:1.02;margin:12px 0 14px;
+  background:linear-gradient(90deg,#5eead4,#7dd3fc,#c4b5fd,#f472b6,#facc15,#5eead4);background-size:300% 100%;
+  -webkit-background-clip:text;background-clip:text;color:transparent;animation:hue 8s linear infinite}
+@keyframes hue{to{background-position:300% 0}}
+#intro p{color:#b9c8e4;font-size:16.5px;line-height:1.6}
+#intro button{margin-top:26px;padding:14px 30px;border-radius:99px;font-size:16px;font-weight:600;border:1.5px solid #5eead4;
+  background:rgba(94,234,212,.12);box-shadow:0 0 30px rgba(94,234,212,.3);transition:.3s}
+#intro button:hover{background:rgba(94,234,212,.3);transform:scale(1.05)}
+
+@media (max-width:760px){
+  #panel{top:auto;left:8px;right:8px;bottom:8px;width:auto;height:66vh;transform:translateY(calc(100% + 20px))}
+  #brand span{display:none}
+  #tools .lbl{display:none}
+  #hint{display:none}
+  #progress{bottom:auto;top:62px;left:18px;padding:6px 10px}
+}
+</style>
+</head>
+<body>
+<canvas id="c"></canvas>
+<div id="viewport"><div id="world"></div></div>
+
+<div id="brand" class="hud"><b><i data-ico="wave"></i>Tecnologías de ondas</b><span>Mapa mental interactivo del ensayo</span></div>
+<div id="tools" class="hud">
+  <button class="tb" id="bTour" title="Recorrido automático"><i data-ico="play"></i><span class="lbl">Recorrido</span></button>
+  <button class="tb" id="bHome" title="Vista general"><i data-ico="target"></i><span class="lbl">Vista general</span></button>
+  <button class="tb" id="bSound" title="Sonido de las ondas"><i data-ico="mute"></i></button>
+  <button class="tb" id="bZin" title="Acercar"><i data-ico="plus"></i></button>
+  <button class="tb" id="bZout" title="Alejar"><i data-ico="minus"></i></button>
+</div>
+<div id="progress" class="hud"><span id="pTxt">Explorado 0/9</span><div class="bar"><i id="pBar"></i></div></div>
+<div id="hint">Arrastra para moverte · rueda para zoom · toca una burbuja · clic en el fondo crea ondas · ← → para navegar</div>
+
+<aside id="panel" aria-live="polite">
+  <button class="x" id="pClose" aria-label="Cerrar"><i data-ico="close"></i></button>
+  <div class="scroll" id="pScroll"></div>
+  <div class="pnav"><button id="pPrev">← Anterior</button><button id="pNext">Siguiente →</button></div>
+</aside>
+
+<div id="intro">
+  <div class="rings"><i></i><i></i><i></i><i></i></div>
+  <div class="in">
+    <small>Ensayo reflexivo · Mapa mental</small>
+    <h1>Las ondas que mueven nuestro mundo</h1>
+    <p>Del sonido de tu alarma a la radioterapia, del Canal de Panamá al ruido de tu salón.<br>Explora cada idea del ensayo como una onda que viaja desde el centro.</p>
+    <button id="go">Comenzar a explorar <i data-ico="wave"></i></button>
+  </div>
+</div>
+
+<script>
+/* =====================================================================
+   ÍCONOS — set propio de línea (24×24, trazo redondeado)
+   ===================================================================== */
+const ICONS = {
+  wave:   '<path d="M2 12c1.7-4.5 3.3-4.5 5 0s3.3 4.5 5 0 3.3-4.5 5 0 3.3 4.5 5 0"/>',
+  signal: '<circle cx="12" cy="12" r="2"/><path d="M8 8a5.6 5.6 0 0 0 0 8M16 8a5.6 5.6 0 0 1 0 8M5 5a10 10 0 0 0 0 14M19 5a10 10 0 0 1 0 14"/>',
+  prism:  '<path d="M12 3.5 4 19h16z"/><path d="M1.5 13.5 9 12"/><path d="M15.2 10.5 22.5 7M15.8 12.2l6.7.3M16.4 13.9l6.1 3.6"/>',
+  tower:  '<circle cx="12" cy="7" r="1.5"/><path d="M12 8.5V21M8.5 21 12 8.5 15.5 21M9.7 16.5h4.6"/><path d="M8.4 3.6a5 5 0 0 0 0 6.8M15.6 3.6a5 5 0 0 1 0 6.8M5.6 1.6a8.6 8.6 0 0 0 0 10.8M18.4 1.6a8.6 8.6 0 0 1 0 10.8"/>',
+  dish:   '<path d="M4.5 8.5a8.5 8.5 0 0 0 11 11z"/><path d="M10 14l4.5-4.5"/><circle cx="15.3" cy="8.7" r="1.2"/><path d="M17.5 4.5a3.5 3.5 0 0 1 2 2M18.5 1.5a7 7 0 0 1 4 4"/><path d="M8 19.5 6 22.5h7"/>',
+  bulb:   '<path d="M9 18h6M10 21h4"/><path d="M12 3a6 6 0 0 0-3.6 10.8c.7.5 1.1 1.3 1.1 2.1V16h5v-.1c0-.8.4-1.6 1.1-2.1A6 6 0 0 0 12 3z"/><path d="M12 7v4M10.5 9.5 12 11l1.5-1.5"/>',
+  pulse:  '<path d="M2 12.5h4l2.2-5.5 3.3 11 3.2-9 2 3.5H22"/>',
+  sonar:  '<circle cx="12" cy="4.5" r="1.6"/><path d="M7.5 9q4.5 3.6 9 0M4.5 12.5q7.5 6 15 0M2 16.5q10 8 20 0"/>',
+  speaker:'<path d="M4 9h3.2L12 5v14l-4.8-4H4z"/><path d="M15.5 9a4.2 4.2 0 0 1 0 6M18.5 6a8.4 8.4 0 0 1 0 12"/>',
+  mute:   '<path d="M4 9h3.2L12 5v14l-4.8-4H4z"/><path d="M16 9.5l5 5M21 9.5l-5 5"/>',
+  sprout: '<path d="M12 21v-8.5"/><path d="M12 12.5C12 7.8 8.8 5 4 5c0 4.6 3.2 7.5 8 7.5z"/><path d="M12 14.5c0-4 3.2-6.8 8-6.8 0 4-3.2 6.8-8 6.8z"/>',
+  play:   '<path d="M7.5 5v14L19 12z"/>',
+  pause:  '<path d="M8.5 5v14M15.5 5v14"/>',
+  target: '<circle cx="12" cy="12" r="8.5"/><circle cx="12" cy="12" r="3.5"/><path d="M12 1.5v3M12 19.5v3M1.5 12h3M19.5 12h3"/>',
+  plus:   '<path d="M12 5v14M5 12h14"/>',
+  minus:  '<path d="M5 12h14"/>',
+  close:  '<path d="M6 6l12 12M18 6 6 18"/>',
+  mic:    '<rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5.5 11a6.5 6.5 0 0 0 13 0M12 17.5V21M9 21h6"/>',
+  stop:   '<rect x="6.5" y="6.5" width="11" height="11" rx="2"/>',
+  sun:    '<circle cx="12" cy="12" r="4"/><path d="M12 2v2.5M12 19.5V22M2 12h2.5M19.5 12H22M4.9 4.9l1.8 1.8M17.3 17.3l1.8 1.8M4.9 19.1l1.8-1.8M17.3 6.7l1.8-1.8"/>',
+  scan:   '<path d="M4 8V5a1 1 0 0 1 1-1h3M16 4h3a1 1 0 0 1 1 1v3M20 16v3a1 1 0 0 1-1 1h-3M8 20H5a1 1 0 0 1-1-1v-3"/><path d="M9.3 9.3l5.4 5.4"/><circle cx="8.3" cy="8.3" r="1.5"/><circle cx="15.7" cy="15.7" r="1.5"/>',
+  burst:  '<circle cx="12" cy="12" r="3"/><path d="M12 2v4.5M12 17.5V22M2 12h4.5M17.5 12H22M4.9 4.9l3.2 3.2M15.9 15.9l3.2 3.2M4.9 19.1l3.2-3.2M15.9 8.1l3.2-3.2"/>'
+};
+const ico = n => `<svg class="i" viewBox="0 0 24 24" aria-hidden="true">${ICONS[n]}</svg>`;
+document.querySelectorAll('[data-ico]').forEach(el => el.outerHTML = ico(el.dataset.ico));
+
+/* =====================================================================
+   DATOS — basados en el ensayo "Tecnologías de ondas"
+   ===================================================================== */
+const CENTER = {
+  id:'center', t:'Las ondas que mueven nuestro mundo', ic:'signal', c:'#7dd3fc',
+  sub:'Ensayo reflexivo sobre tecnologías de ondas',
+  p:[
+    'Cada mañana, antes de salir de casa, usamos ondas sin darnos cuenta. La alarma del celular suena gracias a ondas sonoras, el mensaje de WhatsApp llega por ondas de radio y el desayuno se calienta en un microondas.',
+    'En este ensayo reflexionamos sobre cómo las tecnologías basadas en ondas han transformado <b>la comunicación, la medicina y la vida diaria</b>, y sobre la responsabilidad que tenemos al usarlas — incluido el ruido que producimos en nuestra propia escuela.',
+    '!Cada burbuja de este mapa es una idea del ensayo. Las líneas que las unen son ondas: las de radio son largas y suaves; las de alta energía, cortas y rápidas — igual que en el espectro real.'
+  ],
+  k:['Comunicación','Medicina','Vida diaria','Responsabilidad']
+};
+
+const BR = [
+  { id:'onda', t:'¿Qué es una onda?', ic:'wave', c:'#5eead4', wl:70, hz:330, sub:'Energía en movimiento',
+    p:['Una onda es una <b>perturbación que transporta energía</b> de un lugar a otro <b>sin trasladar materia</b>.',
+       'Existen dos grandes tipos: las <b>ondas mecánicas</b>, como el sonido, que necesitan un medio para viajar, y las <b>ondas electromagnéticas</b>, como la luz, que pueden viajar incluso en el vacío.',
+       '!La luz viaja a unos 300 000 km por segundo: podría dar más de 7 vueltas a la Tierra en un solo segundo.'],
+    k:['Transporta energía, no materia','Mecánicas: necesitan un medio','Electromagnéticas: viajan en el vacío','Luz: ~300 000 km/s'], w:'onda' },
+  { id:'espectro', t:'Espectro electro­magnético', ic:'prism', c:'#c4b5fd', wl:42, hz:392, sub:'Las ondas ordenadas por su energía',
+    p:['El espectro electromagnético ordena estas ondas según su <b>longitud de onda</b> y su <b>frecuencia</b>: ondas de radio, microondas, infrarrojo, luz visible, ultravioleta, rayos X y rayos gamma.',
+       '!Mientras más corta es la longitud de onda, mayor es la frecuencia y más energía transporta.'],
+    k:['Radio · Microondas · Infrarrojo','Luz visible','Ultravioleta · Rayos X · Gamma','Más corta = más energía'], w:'espectro' },
+  { id:'radio', t:'Ondas de radio', ic:'tower', c:'#fb7185', wl:130, hz:196, sub:'La primera gran revolución de las comunicaciones',
+    p:['Las ondas de radio son las <b>más largas del espectro</b> y fueron la base de la primera gran revolución de las comunicaciones: radio AM y FM, televisión y comunicación de barcos y aviones.',
+       '!En Colón, donde cada día pasan decenas de buques por el Canal de Panamá, la radiocomunicación es esencial para coordinar el tráfico marítimo con seguridad.',
+       'Hoy, las mismas ondas de radio, en frecuencias más altas, permiten la <b>telefonía celular, el wifi y el GPS</b>.'],
+    k:['Radio AM y FM','Televisión','Barcos y aviones','Canal de Panamá · Colón','Celular, wifi y GPS'], w:'radio' },
+  { id:'micro', t:'Microondas', ic:'dish', c:'#fb923c', wl:78, hz:262, sub:'De la cocina al satélite',
+    p:['En la <b>cocina</b>, las microondas hacen vibrar las moléculas de agua de los alimentos y así los calientan.',
+       'En las <b>telecomunicaciones</b> transportan las señales de los satélites, las antenas de telefonía y las redes 4G y 5G.',
+       '!También hacen posible el radar, que mide la distancia y la velocidad de aviones, barcos y tormentas.'],
+    k:['Horno: vibran moléculas de agua','Satélites y antenas','Redes 4G y 5G','Radar'], w:'radar' },
+  { id:'luz', t:'Infrarrojo y luz visible', ic:'bulb', c:'#facc15', wl:34, hz:440, sub:'La luz también es tecnología',
+    p:['El <b>control remoto</b> del televisor envía pulsos infrarrojos, y las <b>cámaras térmicas</b> detectan el calor del cuerpo, algo muy usado por bomberos y médicos.',
+       '!La fibra óptica transporta internet en forma de pulsos de luz a través de hilos de vidrio: es la razón por la que podemos ver videos en alta calidad.'],
+    k:['Control remoto','Cámaras térmicas','Fibra óptica: internet de luz'], w:'fibra' },
+  { id:'medicina', t:'Medicina de alta energía', ic:'pulse', c:'#a78bfa', wl:15, hz:523, sub:'La energía que cura… y que puede dañar',
+    p:['En la medicina, las ondas de alta energía salvan vidas. Los <b>rayos X</b> permiten ver huesos fracturados sin abrir el cuerpo, y los <b>rayos gamma</b> se usan en radioterapia para destruir células de cáncer. La luz <b>ultravioleta</b> desinfecta agua y superficies.',
+       '!Primera reflexión importante: la misma energía que cura también puede dañar.',
+       'Por eso los técnicos de radiología usan protección de plomo y por eso debemos usar bloqueador solar contra la radiación ultravioleta.'],
+    k:['Rayos X: ver huesos','Gamma: radioterapia','UV: desinfección','Plomo y bloqueador solar'], w:'medicina' },
+  { id:'mecanicas', t:'Ondas mecánicas', ic:'sonar', c:'#34d399', wl:56, hz:294, sub:'Sonido que ve lo invisible',
+    p:['El <b>ultrasonido</b> usa sonido de frecuencia tan alta que no lo escuchamos, y con él los médicos observan a un bebé antes de nacer.',
+       '!El sonar de los barcos funciona de manera parecida a los murciélagos y los delfines: emite sonido y mide el eco para conocer la profundidad del mar.'],
+    k:['Ultrasonido: ver al bebé','Sonar de barcos','Ecolocalización: murciélagos y delfines'], w:'sonar' },
+  { id:'ruido', t:'Contaminación acústica', ic:'speaker', c:'#f472b6', wl:20, hz:587, sub:'El lado negativo del sonido',
+    p:['El sonido también tiene un lado negativo que vivimos a diario. El ruido se mide en <b>decibeles (dB)</b>. Una conversación normal tiene unos 60 dB, mientras que un aula ruidosa o un recreo pueden superar los 80 dB.',
+       '!La Organización Mundial de la Salud recomienda que el ruido de fondo en un salón de clases no supere los 35 dB.',
+       'El exceso dificulta la concentración, provoca dolor de cabeza y cansa la voz de los docentes. No todas las ondas que afectan nuestra salud vienen de máquinas complejas: muchas las producimos nosotros mismos con gritos, música a alto volumen y bocinas.'],
+    k:['Se mide en decibeles (dB)','Aula ideal (OMS): ≤ 35 dB','Conversación: ~60 dB','Recreo: +80 dB','Gritos, música y bocinas'], w:'ruido' },
+  { id:'conclusion', t:'Reflexión final', ic:'sprout', c:'#e2e8f0', wl:48, hz:349, sub:'Conocer para usar con responsabilidad',
+    p:['Vivimos rodeados de ondas: casi todo lo que valoramos de la vida moderna depende de su uso — <b>comunicarnos, estudiar, curarnos y navegar con seguridad</b>. Cada tipo de onda tiene beneficios y riesgos, y la diferencia está en cómo la usamos.',
+       'Como estudiantes que aspiramos a carreras en ciencia y tecnología, creemos que conocer el espectro electromagnético no es solo memorizar nombres, sino entender cómo funciona el mundo para usarlo con responsabilidad.',
+       '!Bajar el volumen, respetar el silencio y cuidar nuestros oídos también es aplicar la física a la vida diaria.'],
+    k:['Beneficios y riesgos','Usar con responsabilidad','Bajar el volumen','Física en la vida diaria'], w:'compromiso' }
+];
+
+/* =====================================================================
+   CANVAS / CÁMARA
+   ===================================================================== */
+const $ = s => document.querySelector(s);
+const cv = $('#c'), ctx = cv.getContext('2d');
+const viewport = $('#viewport'), world = $('#world');
+let W, H, DPR;
+function resize(){
+  DPR = Math.min(2, window.devicePixelRatio || 1);
+  W = innerWidth; H = innerHeight;
+  cv.width = W*DPR; cv.height = H*DPR; ctx.setTransform(DPR,0,0,DPR,0,0);
+}
+resize(); addEventListener('resize', ()=>{ resize(); layout(); });
+
+const cam = {x:0,y:0,z:1}, tgt = {x:0,y:0,z:1};
+const fitZ = () => Math.max(.38, Math.min(1, W/1260, H/920));
+const w2s = (x,y) => [W/2 + cam.x + x*cam.z, H/2 + cam.y + y*cam.z];
+const s2w = (x,y) => [(x - W/2 - cam.x)/cam.z, (y - H/2 - cam.y)/cam.z];
+const lerp = (a,b,t) => a + (b-a)*t;
+const clamp = (v,a,b) => Math.max(a, Math.min(b, v));
+let now = 0;
+
+/* =====================================================================
+   NODOS
+   ===================================================================== */
+const nodes = [];
+let centerNode, openBranch = null, current = null, hovered = null;
+const visited = new Set();
+
+function makeNode(type, data, parent, idx){
+  const el = document.createElement('div');
+  el.className = 'node ' + type;
+  el.style.setProperty('--c', data.c || parent.data.c);
+  if(type === 'center'){
+    el.innerHTML = `<div class="bubble"><div class="ic">${ico(data.ic)}Introducción</div><div class="lb">${data.t}</div>
+      <svg viewBox="0 0 130 22"><path d="M0 11 ${Array.from({length:9},(_,i)=>`Q ${i*20+5} ${i%2?20:2} ${i*20+10} 11`).join(' ')}"/></svg></div>`;
+  } else if(type === 'main'){
+    el.innerHTML = `<div class="bubble"><span class="ck">✓</span><div class="ic">${ico(data.ic)}</div><div class="lb">${data.t}</div></div>`;
+  } else {
+    el.innerHTML = `<span class="pill">${data}</span>`;
+  }
+  world.appendChild(el);
+  const n = { type, data, parent, idx, el, x:0, y:0, bx:0, by:0, vis: type==='child'?0:1, ph:Math.random()*6.28, openAt:0, kids:[] };
+  if(type === 'child'){ el.style.opacity = 0; el.style.pointerEvents = 'none'; }
+  el.addEventListener('click', e => { e.stopPropagation(); select(n); });
+  el.addEventListener('pointerenter', () => { hovered = n; if(type!=='child') blip(type==='center'?165:data.hz, .08); });
+  el.addEventListener('pointerleave', () => { if(hovered === n) hovered = null; });
+  nodes.push(n);
+  return n;
+}
+
+centerNode = makeNode('center', CENTER);
+BR.forEach((b,i) => {
+  const m = makeNode('main', b, null, i);
+  b.k.forEach((k,j) => m.kids.push(makeNode('child', k, m, j)));
+});
+const mains = nodes.filter(n => n.type === 'main');
+
+function layout(){
+  const rx = 430, ry = 310;
+  mains.forEach((m,i) => {
+    const a = -Math.PI/2 + i*2*Math.PI/mains.length;
+    m.a = a; m.bx = Math.cos(a)*rx; m.by = Math.sin(a)*ry;
+    const dist = 215, n = m.kids.length;
+    const tx = Math.abs(Math.sin(a)), ty = Math.abs(Math.cos(a));
+    const need = 175*tx + 50*ty + 12;            // espacio requerido en la dirección tangente
+    const step = need / dist;
+    m.kids.forEach((k,j) => {
+      const ka = a + (j - (n-1)/2) * step;
+      k.bx = m.bx + Math.cos(ka)*dist; k.by = m.by + Math.sin(ka)*dist;
+    });
+  });
+}
+layout();
+
+/* =====================================================================
+   SELECCIÓN / PANEL
+   ===================================================================== */
+const panel = $('#panel'), pScroll = $('#pScroll');
+let widget = null;
+
+function select(n, fromTour){
+  if(!fromTour) stopTour();
+  if(n.type === 'child'){
+    if(openBranch !== n.parent) select(n.parent);
+    flashKey(n.idx);
+    ripple(n.x, n.y, n.parent.data.c, 140);
+    blip(n.parent.data.hz*1.5, .05);
+    return;
+  }
+  if(n.type === 'main' && openBranch === n && panel.classList.contains('open')){
+    closePanel(); return;
+  }
+  setBranch(n.type === 'main' ? n : null);
+  ripple(n.x, n.y, n.data.c, 320);
+  blip(n.type==='center'?165:n.data.hz, .1);
+  openPanel(n);
+  focusOn(n);
+}
+
+function setBranch(m){
+  if(openBranch) openBranch.el.classList.remove('open');
+  openBranch = m;
+  if(m){
+    m.el.classList.add('open');
+    m.kids.forEach((k,j) => k.openAt = now + .15 + j*.08);
+  }
+}
+
+function focusOn(n){
+  const panelOpen = panel.classList.contains('open');
+  const wide = W > 760;
+  let cx = n.bx, cy = n.by, z;
+  if(n.type === 'main'){
+    const ax = n.kids.reduce((s,k)=>s+k.bx,0)/n.kids.length, ay = n.kids.reduce((s,k)=>s+k.by,0)/n.kids.length;
+    cx = (n.bx + ax)/2; cy = (n.by + ay)/2;
+    z = clamp(Math.min((wide ? W-470 : W)/620, (wide ? H : H*.34)/560), .45, 1.15);
+  } else z = fitZ();
+  tgt.z = z;
+  tgt.x = -cx*z - (panelOpen && wide ? 230 : 0);
+  tgt.y = -cy*z - (panelOpen && !wide ? H*.3 : 0);
+}
+
+function home(){
+  closePanel();
+  tgt.z = fitZ(); tgt.x = 0; tgt.y = 0;
+}
+
+function openPanel(n){
+  current = n;
+  stopWidget();
+  const d = n.data, isC = n.type === 'center';
+  panel.style.setProperty('--pc', d.c);
+  const paras = d.p.map(p => p.startsWith('!') ? `<p class="hl">${p.slice(1)}</p>` : `<p>${p}</p>`).join('');
+  pScroll.innerHTML = `
+    <div class="ph"><div class="pic">${ico(d.ic)}</div>
+      <div><small>${isC ? 'Idea central' : `Rama ${n.idx+1} de ${BR.length}`}</small><h2>${d.t.replace('­','')}</h2><em>${d.sub}</em></div></div>
+    <div class="pbody">${paras}</div>
+    ${d.w ? `<h3>Experimenta</h3><div class="widget" id="wbox"></div>` : ''}
+    <h3>Ideas clave</h3><ul class="keys">${d.k.map(k=>`<li>${k}</li>`).join('')}</ul>
+    ${isC ? `<h3>Cómo explorar</h3><ul class="keys"><li>Arrastra el fondo</li><li>Rueda = zoom</li><li>Clic en el fondo = ondas</li><li>← → para navegar</li><li>Recorrido automático</li></ul>` : ''}`;
+  pScroll.scrollTop = 0;
+  panel.classList.add('open');
+  if(d.w){
+    const box = $('#wbox');
+    widget = WIDGETS[d.w](box, d.c);
+  }
+  if(!isC){
+    visited.add(d.id); n.el.classList.add('visited');
+    $('#pTxt').textContent = `Explorado ${visited.size}/${BR.length}`;
+    $('#pBar').style.width = (visited.size/BR.length*100) + '%';
+    if(visited.size === BR.length && !celebrated){ celebrated = true; celebrate(); }
+  }
+}
+let celebrated = false;
+
+function closePanel(){
+  panel.classList.remove('open');
+  stopWidget();
+  setBranch(null);
+  current = null;
+}
+function stopWidget(){ if(widget && widget.stop) widget.stop(); widget = null; }
+
+function flashKey(i){
+  const lists = pScroll.querySelectorAll('.keys');
+  const target = lists[0] && lists[0].children[i];
+  if(!target) return;
+  target.classList.add('flash');
+  target.scrollIntoView({behavior:'smooth', block:'center'});
+  setTimeout(() => target.classList.remove('flash'), 1400);
+}
+
+function step(dir){
+  const order = [centerNode, ...mains];
+  let i = current ? order.indexOf(current) : 0;
+  i = (i + dir + order.length) % order.length;
+  select(order[i]);
+}
+
+$('#pClose').onclick = () => closePanel();
+$('#pPrev').onclick = () => step(-1);
+$('#pNext').onclick = () => step(1);
+$('#bHome').onclick = () => { stopTour(); home(); };
+$('#bZin').onclick = () => zoomAt(W/2, H/2, 1.25);
+$('#bZout').onclick = () => zoomAt(W/2, H/2, .8);
+addEventListener('keydown', e => {
+  if(!$('#intro').classList.contains('gone')) return;
+  if(e.key === 'ArrowRight') step(1);
+  else if(e.key === 'ArrowLeft') step(-1);
+  else if(e.key === 'Escape') closePanel();
+});
+
+/* =====================================================================
+   RECORRIDO AUTOMÁTICO
+   ===================================================================== */
+let tour = false, tourNext = 0, tourIdx = -1;
+$('#bTour').onclick = () => tour ? stopTour() : startTour();
+function startTour(){
+  tour = true; tourIdx = -1; tourNext = now;
+  $('#bTour').classList.add('on'); $('#bTour').innerHTML = ico('pause') + '<span class="lbl">Pausar</span>';
+}
+function stopTour(){
+  if(!tour) return;
+  tour = false;
+  $('#bTour').classList.remove('on'); $('#bTour').innerHTML = ico('play') + '<span class="lbl">Recorrido</span>';
+}
+function tourTick(){
+  if(!tour || now < tourNext) return;
+  tourIdx = (tourIdx + 1) % (mains.length + 1);
+  const n = tourIdx === 0 ? centerNode : mains[tourIdx-1];
+  select(n, true);
+  tourNext = now + 9;
+}
+
+/* =====================================================================
+   INTERACCIÓN: ARRASTRAR, ZOOM, ONDAS
+   ===================================================================== */
+const mouse = {x:-999, y:-999};
+let drag = null;
+viewport.addEventListener('pointerdown', e => {
+  if(e.target.closest('.node')) return;
+  drag = {x:e.clientX, y:e.clientY, cx:cam.x, cy:cam.y, moved:false};
+  viewport.setPointerCapture(e.pointerId);
+  viewport.classList.add('dragging');
+});
+addEventListener('pointermove', e => {
+  mouse.x = e.clientX; mouse.y = e.clientY;
+  if(!drag) return;
+  const dx = e.clientX - drag.x, dy = e.clientY - drag.y;
+  if(Math.hypot(dx,dy) > 5){ drag.moved = true; stopTour(); }
+  if(drag.moved){ cam.x = tgt.x = drag.cx + dx; cam.y = tgt.y = drag.cy + dy; }
+});
+viewport.addEventListener('pointerup', e => {
+  if(drag && !drag.moved){
+    const [wx,wy] = s2w(e.clientX, e.clientY);
+    const cols = ['#5eead4','#7dd3fc','#c4b5fd','#f472b6','#facc15'];
+    ripple(wx, wy, cols[(Math.random()*cols.length)|0], 260);
+    blip(220 + Math.random()*300, .04);
+  }
+  drag = null; viewport.classList.remove('dragging');
+});
+viewport.addEventListener('wheel', e => {
+  e.preventDefault();
+  zoomAt(e.clientX, e.clientY, Math.exp(-e.deltaY*0.0012));
+}, {passive:false});
+function zoomAt(sx, sy, f){
+  const z = clamp(cam.z*f, .3, 2.4);
+  const [wx,wy] = s2w(sx, sy);
+  cam.x = tgt.x = sx - W/2 - wx*z;
+  cam.y = tgt.y = sy - H/2 - wy*z;
+  cam.z = tgt.z = z;
+}
+
+/* =====================================================================
+   SONIDO (Web Audio)
+   ===================================================================== */
+let actx = null, soundOn = false;
+$('#bSound').onclick = () => {
+  soundOn = !soundOn;
+  $('#bSound').innerHTML = ico(soundOn ? 'speaker' : 'mute');
+  $('#bSound').classList.toggle('on', soundOn);
+  if(soundOn){ actx = actx || new (window.AudioContext || window.webkitAudioContext)(); actx.resume(); blip(392,.08); }
+};
+function blip(f, vol=.06){
+  if(!soundOn || !actx) return;
+  const t = actx.currentTime, o = actx.createOscillator(), g = actx.createGain(), o2 = actx.createOscillator(), g2 = actx.createGain();
+  o.type = 'sine'; o.frequency.value = f; o2.type = 'sine'; o2.frequency.value = f*2.01;
+  g.gain.setValueAtTime(0,t); g.gain.linearRampToValueAtTime(vol,t+.02); g.gain.exponentialRampToValueAtTime(.0001,t+.9);
+  g2.gain.setValueAtTime(0,t); g2.gain.linearRampToValueAtTime(vol*.25,t+.02); g2.gain.exponentialRampToValueAtTime(.0001,t+.5);
+  o.connect(g).connect(actx.destination); o2.connect(g2).connect(actx.destination);
+  o.start(t); o2.start(t); o.stop(t+1); o2.stop(t+.6);
+}
+
+/* =====================================================================
+   DIBUJO: FONDO, ONDAS DE CONEXIÓN, RIPPLES
+   ===================================================================== */
+const ripples = [];
+function ripple(x, y, color, size){ ripples.push({x, y, color, size, t0: now}); if(ripples.length > 40) ripples.shift(); }
+
+const photons = Array.from({length:90}, () => ({x:Math.random(), y:Math.random(), s:Math.random()*1.6+.3, v:Math.random()*.012+.003, d:Math.random()*.5+.2}));
+let noiseBoost = 0; // lo modifica el medidor de ruido
+
+function hexA(hex, a){
+  const h = hex.replace('#',''); const n = parseInt(h.length===3 ? h.split('').map(c=>c+c).join('') : h, 16);
+  return `rgba(${n>>16&255},${n>>8&255},${n&255},${a})`;
+}
+
+function drawBg(t){
+  const g = ctx.createRadialGradient(W*.5, H*.45, 0, W*.5, H*.5, Math.max(W,H)*.8);
+  g.addColorStop(0, '#0c1a3d'); g.addColorStop(.55, '#070f26'); g.addColorStop(1, '#03060f');
+  ctx.fillStyle = g; ctx.fillRect(0,0,W,H);
+
+  // fotones a la deriva
+  for(const p of photons){
+    p.x += p.v * .016; if(p.x > 1.02) p.x = -.02;
+    const px = ((p.x*W + cam.x*p.d*.3) % W + W) % W, py = ((p.y*H + cam.y*p.d*.3) % H + H) % H;
+    ctx.fillStyle = `rgba(180,220,255,${.25 + .35*Math.sin(t*2 + p.y*40)**2})`;
+    ctx.fillRect(px, py, p.s, p.s);
+  }
+
+  // capas de ondas tipo océano
+  const layers = [
+    {y:.18, a:16, l:420, s:.35, c:'94,234,212'},
+    {y:.34, a:22, l:560, s:-.25, c:'125,211,252'},
+    {y:.66, a:26, l:480, s:.3, c:'196,181,253'},
+    {y:.80, a:30, l:640, s:-.2, c:'244,114,182'},
+    {y:.92, a:20, l:360, s:.45, c:'94,234,212'}
+  ];
+  const boost = 1 + noiseBoost*3;
+  layers.forEach((L,i) => {
+    const off = cam.x * (.08 + i*.03);
+    const baseY = L.y*H + cam.y*(.05 + i*.02);
+    ctx.beginPath();
+    for(let x = -10; x <= W+10; x += 8){
+      const dx = x - mouse.x, dy = baseY - mouse.y;
+      const bump = Math.exp(-(dx*dx)/(2*170*170)) * Math.exp(-(dy*dy)/(2*140*140)) * 38;
+      const jitter = noiseBoost > .05 ? Math.sin(x*.13 + t*25)*noiseBoost*14 : 0;
+      const y = baseY + Math.sin((x + off)/L.l*6.283 + t*L.s*3)*L.a*boost
+                + Math.sin((x + off)/(L.l*.37)*6.283 - t*L.s*2)*L.a*.35 + bump*Math.sin(t*4 + x*.03) + jitter;
+      x === -10 ? ctx.moveTo(x,y) : ctx.lineTo(x,y);
+    }
+    ctx.strokeStyle = `rgba(${L.c},${.08 + .03*i})`; ctx.lineWidth = 1.4; ctx.stroke();
+    ctx.lineTo(W+10, H); ctx.lineTo(-10, H); ctx.closePath();
+    ctx.fillStyle = `rgba(${L.c},.012)`; ctx.fill();
+  });
+}
+
+function wavePath(ax, ay, bx, by, wl, amp, phase){
+  const dx = bx-ax, dy = by-ay, L = Math.hypot(dx,dy);
+  if(L < 2) return null;
+  const ux = dx/L, uy = dy/L, nx = -uy, ny = ux;
+  const pts = [];
+  const stepPx = Math.max(2, Math.min(5, wl/6));
+  for(let s = 0; s <= L; s += stepPx){
+    const env = Math.sin(Math.PI*s/L)**.6;
+    const o = Math.sin(s/wl*6.283 - phase) * amp * env;
+    pts.push(ax + ux*s + nx*o, ay + uy*s + ny*o);
+  }
+  pts.push(bx, by);
+  return {pts, L, ux, uy, nx, ny};
+}
+function strokePts(pts, color, alpha, width){
+  ctx.beginPath(); ctx.moveTo(pts[0], pts[1]);
+  for(let i = 2; i < pts.length; i += 2) ctx.lineTo(pts[i], pts[i+1]);
+  ctx.strokeStyle = hexA(color, alpha*.18); ctx.lineWidth = width*4.5; ctx.stroke();
+  ctx.strokeStyle = hexA(color, alpha); ctx.lineWidth = width; ctx.stroke();
+}
+
+function drawLinks(t){
+  const z = cam.z;
+  const [cx, cy] = w2s(centerNode.x, centerNode.y);
+  mains.forEach((m, i) => {
+    const [mx, my] = w2s(m.x, m.y);
+    const hot = hovered === m || openBranch === m || (hovered && hovered.parent === m);
+    const amp = (hot ? 16 : 9) * z, wl = m.data.wl * z;
+    const speed = 6.283 * (90 / m.data.wl) * .55;   // ondas cortas viajan "más rápido" visualmente
+    const P = wavePath(cx, cy, mx, my, wl, amp, t*speed);
+    if(!P) return;
+    strokePts(P.pts, m.data.c, hot ? .95 : .55, hot ? 2.4 : 1.6);
+    // pulso de energía que viaja del centro hacia la idea
+    for(let k = 0; k < 2; k++){
+      const u = ((t*.28 + i*.13 + k*.5) % 1);
+      const idx = Math.min(P.pts.length-2, Math.floor(u*(P.pts.length/2))*2);
+      const px = P.pts[idx], py = P.pts[idx+1];
+      const r = (hot ? 5 : 3.5) * z + 1;
+      const gg = ctx.createRadialGradient(px,py,0,px,py,r*4);
+      gg.addColorStop(0, hexA(m.data.c, .95)); gg.addColorStop(1, hexA(m.data.c, 0));
+      ctx.fillStyle = gg; ctx.beginPath(); ctx.arc(px,py,r*4,0,6.283); ctx.fill();
+    }
+    // hijos
+    m.kids.forEach(k => {
+      if(k.vis < .02) return;
+      const [kx, ky] = w2s(k.x, k.y);
+      const Q = wavePath(mx, my, kx, ky, wl*.6, 5*z*k.vis, t*speed*1.3);
+      if(Q) strokePts(Q.pts, m.data.c, .65*k.vis, 1.3);
+    });
+  });
+}
+
+function drawRipples(t){
+  for(let i = ripples.length-1; i >= 0; i--){
+    const r = ripples[i], age = t - r.t0, life = 2.4;
+    if(age > life){ ripples.splice(i,1); continue; }
+    const [sx, sy] = w2s(r.x, r.y);
+    for(let k = 0; k < 4; k++){
+      const a = age - k*.18; if(a < 0) continue;
+      const p = a/life, rad = (20 + p*r.size) * cam.z;
+      ctx.beginPath(); ctx.arc(sx, sy, rad, 0, 6.283);
+      ctx.strokeStyle = hexA(r.color, (1-p)**2 * .7 / (k*.6+1)); ctx.lineWidth = 2 - k*.3; ctx.stroke();
+    }
+  }
+}
+
+/* =====================================================================
+   BUCLE PRINCIPAL
+   ===================================================================== */
+function frame(ms){
+  now = ms/1000;
+  cam.x += (tgt.x - cam.x)*.075; cam.y += (tgt.y - cam.y)*.075; cam.z += (tgt.z - cam.z)*.075;
+  world.style.transform = `translate(${cam.x}px,${cam.y}px) scale(${cam.z})`;
+
+  for(const n of nodes){
+    if(n.type !== 'child'){
+      n.x = n.bx + Math.sin(now*.7 + n.ph)*7;
+      n.y = n.by + Math.cos(now*.9 + n.ph)*7;
+    } else {
+      const want = (openBranch === n.parent && now >= n.openAt) ? 1 : 0;
+      n.vis += (want - n.vis) * .12;
+      const e = 1 - (1-n.vis)**3;
+      const tx = n.parent.x + (n.bx - n.parent.bx) + Math.sin(now*1.1 + n.ph)*4;
+      const ty = n.parent.y + (n.by - n.parent.by) + Math.cos(now*1.3 + n.ph)*4;
+      n.x = lerp(n.parent.x, tx, e); n.y = lerp(n.parent.y, ty, e);
+      n.el.style.opacity = n.vis.toFixed(3);
+      n.el.style.pointerEvents = n.vis > .6 ? 'auto' : 'none';
+    }
+    const sc = n.type === 'child' ? (.35 + .65*n.vis) : 1;
+    n.el.style.transform = `translate(${n.x}px,${n.y}px) translate(-50%,-50%) scale(${sc})`;
+  }
+
+  drawBg(now);
+  drawLinks(now);
+  drawRipples(now);
+  tourTick();
+  if(widget && widget.draw) widget.draw(now);
+  requestAnimationFrame(frame);
+}
+
+/* =====================================================================
+   WIDGETS INTERACTIVOS (uno por rama)
+   ===================================================================== */
+function fitCanvas(c, h){
+  const w = c.parentElement.clientWidth - 0 || 380;
+  c.style.height = h + 'px';
+  c.width = w*DPR; c.height = h*DPR;
+  const x = c.getContext('2d'); x.setTransform(DPR,0,0,DPR,0,0);
+  return {x, w, h};
+}
+function segBind(box, cb){
+  box.querySelectorAll('.seg button').forEach(b => b.onclick = () => {
+    box.querySelectorAll('.seg button').forEach(o => o.classList.toggle('on', o === b)); cb(b.dataset.m);
+  });
+}
+
+const WIDGETS = {
+
+  /* --- ¿Qué es una onda? --- */
+  onda(box, col){
+    box.innerHTML = `<div class="seg"><button class="on" data-m="mec">Mecánica · sonido</button><button data-m="em">Electromagnética · luz</button></div>
+      <canvas></canvas>
+      <label><span>Amplitud</span><input type="range" id="wa" min="6" max="40" value="24"></label>
+      <label><span>Frecuencia</span><input type="range" id="wf" min="1" max="9" value="3" step=".1"></label>
+      <div class="ro" id="wtxt"></div><div class="meter"><i id="wen"></i></div>`;
+    const g = fitCanvas(box.querySelector('canvas'), 170);
+    let mode = 'mec';
+    const A = box.querySelector('#wa'), F = box.querySelector('#wf');
+    const upd = () => {
+      box.querySelector('#wtxt').innerHTML = (mode === 'mec'
+        ? 'Las partículas del aire <b>vibran en su lugar</b> y pasan la energía a sus vecinas: la onda avanza, la materia no. Necesita un medio; en el aire viaja a ~343 m/s.'
+        : 'Campos eléctrico (<b>E</b>) y magnético (<b>B</b>) que se impulsan entre sí. <b>No necesita medio</b>: cruza el vacío a ~300 000 km/s.')
+        + `<br>Energía relativa (frecuencia × amplitud):`;
+      box.querySelector('#wen').style.width = (F.value/9 * A.value/40 * 100) + '%';
+    };
+    segBind(box, m => { mode = m; upd(); }); A.oninput = F.oninput = upd; upd();
+    return { draw(t){
+      const {x, w, h} = g, a = +A.value, f = +F.value, k = f*6.283/w, om = f*2.2;
+      x.clearRect(0,0,w,h); x.fillStyle = 'rgba(0,0,0,.25)'; x.fillRect(0,0,w,h);
+      if(mode === 'mec'){
+        for(let y = 18; y < h-10; y += 15){
+          for(let X = 8; X < w; X += 10){
+            const d = Math.sin(k*X - om*t) * a*.35;
+            const comp = (Math.cos(k*X - om*t) + 1)/2;
+            x.fillStyle = hexA(col, .25 + .7*comp);
+            x.beginPath(); x.arc(X + d, y, 2.1, 0, 6.283); x.fill();
+          }
+        }
+        // partícula marcada: se mueve de ida y vuelta, pero no avanza
+        const X0 = w*.5, d0 = Math.sin(k*X0 - om*t)*a*.35;
+        x.fillStyle = '#fff'; x.shadowColor = '#fff'; x.shadowBlur = 10;
+        x.beginPath(); x.arc(X0 + d0, 18 + 15*5, 4, 0, 6.283); x.fill(); x.shadowBlur = 0;
+        x.fillStyle = 'rgba(255,255,255,.6)'; x.font = '11px Outfit'; x.fillText('partícula: va y viene, no viaja', 8, h-6);
+      } else {
+        const mid = h/2;
+        x.strokeStyle = 'rgba(255,255,255,.18)'; x.beginPath(); x.moveTo(0,mid); x.lineTo(w,mid); x.stroke();
+        x.lineWidth = 2.2; x.strokeStyle = col; x.shadowColor = col; x.shadowBlur = 8; x.beginPath();
+        for(let X = 0; X <= w; X += 2){ const y = mid - Math.sin(k*X - om*t)*a*1.6; X ? x.lineTo(X,y) : x.moveTo(X,y); } x.stroke();
+        x.strokeStyle = '#7dd3fc'; x.shadowColor = '#7dd3fc'; x.beginPath();
+        for(let X = 0; X <= w; X += 2){ const s = Math.sin(k*X - om*t)*a*.9; const y = mid + s*.45, xx = X + s*.6; X ? x.lineTo(xx,y) : x.moveTo(xx,y); } x.stroke();
+        x.shadowBlur = 0; x.lineWidth = 1;
+        x.font = '600 12px Outfit'; x.fillStyle = col; x.fillText('E', 8, 16); x.fillStyle = '#7dd3fc'; x.fillText('B', 22, 16);
+        x.fillStyle = 'rgba(255,255,255,.6)'; x.font = '11px Outfit'; x.fillText('vacío · sin partículas', 8, h-6);
+      }
+    }};
+  },
+
+  /* --- Espectro --- */
+  espectro(box, col){
+    const S = [
+      {n:'Ondas de radio', s:'Radio', l:'más de 1 m', u:'Radio AM/FM, televisión, barcos, aviones, celular, wifi y GPS', c:'#fb7185'},
+      {n:'Microondas', s:'Micro', l:'1 mm – 1 m', u:'Horno de microondas, satélites, 4G/5G y radar', c:'#fb923c'},
+      {n:'Infrarrojo', s:'IR', l:'700 nm – 1 mm', u:'Control remoto y cámaras térmicas (bomberos, médicos)', c:'#ef4444'},
+      {n:'Luz visible', s:'Visible', l:'400 – 700 nm', u:'Lo que ven tus ojos… y la fibra óptica que lleva internet', c:'#facc15'},
+      {n:'Ultravioleta', s:'UV', l:'10 – 400 nm', u:'Desinfecta agua y superficies. ¡Usa bloqueador solar!', c:'#a78bfa'},
+      {n:'Rayos X', s:'X', l:'0,01 – 10 nm', u:'Radiografías: ver huesos fracturados sin abrir el cuerpo', c:'#7dd3fc'},
+      {n:'Rayos gamma', s:'γ', l:'menos de 0,01 nm', u:'Radioterapia: destruyen células de cáncer', c:'#86efac'}
+    ];
+    box.innerHTML = `<canvas></canvas>
+      <div class="specbar">${S.map((s,i)=>`<button data-i="${i}" style="background:${i===3?'linear-gradient(90deg,#ef4444,#facc15,#22c55e,#3b82f6,#8b5cf6)':s.c}">${s.s}</button>`).join('')}</div>
+      <div class="speclegend"><span>← onda larga · baja energía</span><span>onda corta · alta energía →</span></div>
+      <label><span>Desliza</span><input type="range" id="sv" min="0" max="6" step=".01" value="0"></label>
+      <div class="card" id="sc"></div><div class="meter"><i id="se"></i></div>`;
+    const g = fitCanvas(box.querySelector('canvas'), 130);
+    const V = box.querySelector('#sv'); let shown = 0, last = -1;
+    const upd = () => {
+      const i = Math.round(+V.value);
+      box.querySelectorAll('.specbar button').forEach((b,j) => b.classList.toggle('on', j === i));
+      if(i !== last){
+        last = i;
+        box.querySelector('#sc').innerHTML = `<b style="color:${S[i].c}">${S[i].n}</b> · longitud de onda: ${S[i].l}<br>${S[i].u}<br><small style="color:var(--muted)">Energía que transporta:</small>`;
+        blip(160*Math.pow(1.35, i), .05);
+      }
+      box.querySelector('#se').style.width = (8 + Math.pow(+V.value/6, 1.6)*92) + '%';
+    };
+    box.querySelectorAll('.specbar button').forEach(b => b.onclick = () => { V.value = b.dataset.i; upd(); });
+    V.oninput = upd; upd();
+    return { draw(t){
+      const {x, w, h} = g; shown += (+V.value - shown)*.1;
+      const v = shown, wl = 170*Math.pow(5/170, v/6), mid = h/2;
+      let c;
+      if(v > 2.5 && v < 3.5) c = `hsl(${(v-2.5)*270},95%,60%)`;
+      else c = S[Math.round(v)].c;
+      x.clearRect(0,0,w,h); x.fillStyle = 'rgba(0,0,0,.3)'; x.fillRect(0,0,w,h);
+      x.strokeStyle = 'rgba(255,255,255,.08)'; for(let X = 0; X < w; X += 20){ x.beginPath(); x.moveTo(X,0); x.lineTo(X,h); x.stroke(); }
+      x.lineWidth = 2.4; x.strokeStyle = c; x.shadowColor = c; x.shadowBlur = 14; x.beginPath();
+      for(let X = 0; X <= w; X += 1){ const y = mid - Math.sin(X/wl*6.283 - t*(3 + v*2))*38; X ? x.lineTo(X,y) : x.moveTo(X,y); }
+      x.stroke(); x.shadowBlur = 0; x.lineWidth = 1;
+      if(wl > 22){ // marca de longitud de onda
+        x.strokeStyle = 'rgba(255,255,255,.55)'; x.beginPath(); x.moveTo(10, h-14); x.lineTo(10+wl, h-14); x.stroke();
+        x.fillStyle = 'rgba(255,255,255,.7)'; x.font = '11px Outfit'; x.fillText('λ', 10 + wl/2 - 3, h-18);
+      }
+    }};
+  },
+
+  /* --- Radio AM / FM --- */
+  radio(box, col){
+    box.innerHTML = `<div class="seg"><button class="on" data-m="am">AM · amplitud</button><button data-m="fm">FM · frecuencia</button></div>
+      <canvas></canvas><div class="ro" id="rt"></div>`;
+    const g = fitCanvas(box.querySelector('canvas'), 200); let mode = 'am';
+    const upd = () => box.querySelector('#rt').innerHTML = mode === 'am'
+      ? 'En <b>AM</b> la voz cambia la <b>altura</b> de la onda portadora. Llega muy lejos, ideal para barcos en alta mar.'
+      : 'En <b>FM</b> la voz cambia qué tan <b>juntas</b> están las crestas. Suena más limpia y con menos interferencia.';
+    segBind(box, m => { mode = m; upd(); }); upd();
+    return { draw(t){
+      const {x, w, h} = g, rows = [h*.17, h*.5, h*.83], A = h*.12;
+      x.clearRect(0,0,w,h); x.fillStyle = 'rgba(0,0,0,.3)'; x.fillRect(0,0,w,h);
+      const msg = X => Math.sin(X/w*6.283*1.5 - t*1.5)*.8 + Math.sin(X/w*6.283*3.7 - t*2.3)*.2;
+      const lab = ['MENSAJE · tu voz','ONDA PORTADORA','SEÑAL TRANSMITIDA'];
+      [0,1,2].forEach(r => {
+        x.beginPath();
+        for(let X = 0; X <= w; X++){
+          const fc = 22, ph = X/w*6.283*fc - t*8;
+          let y;
+          if(r === 0) y = msg(X);
+          else if(r === 1) y = Math.sin(ph);
+          else y = mode === 'am' ? Math.sin(ph)*(.55 + .45*msg(X)) : Math.sin(ph + 9*Math.cos(X/w*6.283*1.5 - t*1.5));
+          y = rows[r] - y*A; X ? x.lineTo(X,y) : x.moveTo(X,y);
+        }
+        x.strokeStyle = r === 2 ? col : r === 0 ? '#facc15' : 'rgba(255,255,255,.4)';
+        x.lineWidth = r === 2 ? 2 : 1.4; x.stroke();
+        x.fillStyle = 'rgba(255,255,255,.65)'; x.font = '11px Outfit'; x.fillText(lab[r], 6, rows[r] - A - 3);
+      });
+      x.lineWidth = 1;
+    }};
+  },
+
+  /* --- Microondas: radar --- */
+  radar(box, col){
+    box.innerHTML = `<canvas></canvas><div class="ro">El radar emite <b>microondas</b> y escucha el eco. Con el tiempo de ida y vuelta calcula la <b>distancia</b>; con varios ecos, la <b>velocidad</b>. Así se coordinan barcos, aviones y se vigilan tormentas.</div>`;
+    const g = fitCanvas(box.querySelector('canvas'), 230);
+    const blips = [{a:.7,r:.72,l:'Avión',v:.12},{a:2.5,r:.55,l:'Buque',v:.015},{a:4.2,r:.82,l:'Tormenta',v:.03},{a:5.4,r:.35,l:'Remolcador',v:-.02}];
+    let lt = now;
+    return { draw(t){
+      const {x, w, h} = g, cx = w/2, cy = h/2, R = h/2 - 10, dt = t - lt; lt = t;
+      x.fillStyle = 'rgba(2,12,10,.9)'; x.fillRect(0,0,w,h);
+      x.strokeStyle = hexA(col,.25);
+      for(let i = 1; i <= 4; i++){ x.beginPath(); x.arc(cx,cy,R*i/4,0,6.283); x.stroke(); }
+      x.beginPath(); x.moveTo(cx-R,cy); x.lineTo(cx+R,cy); x.moveTo(cx,cy-R); x.lineTo(cx,cy+R); x.stroke();
+      const sw = (t*1.3) % 6.283;
+      for(let i = 0; i < 40; i++){
+        const a = sw - i*.025;
+        x.strokeStyle = hexA(col, .5*(1 - i/40)); x.lineWidth = 2;
+        x.beginPath(); x.moveTo(cx,cy); x.lineTo(cx + Math.cos(a)*R, cy + Math.sin(a)*R); x.stroke();
+      }
+      x.lineWidth = 1;
+      blips.forEach(b => {
+        b.a = (b.a + b.v*dt + 6.283) % 6.283;
+        const diff = ((sw - b.a) % 6.283 + 6.283) % 6.283, br = Math.exp(-diff*.9);
+        const bx = cx + Math.cos(b.a)*R*b.r, by = cy + Math.sin(b.a)*R*b.r;
+        x.fillStyle = hexA(col, .2 + .8*br); x.shadowColor = col; x.shadowBlur = 12*br;
+        x.beginPath(); x.arc(bx,by,3 + 3*br,0,6.283); x.fill(); x.shadowBlur = 0;
+        if(br > .15){
+          x.fillStyle = `rgba(255,255,255,${br})`; x.font = '11px Outfit';
+          x.fillText(`${b.l} · ${(b.r*40).toFixed(1)} km`, bx + 8, by - 6);
+        }
+      });
+    }};
+  },
+
+  /* --- Fibra óptica --- */
+  fibra(box, col){
+    box.innerHTML = `<canvas></canvas>
+      <label><span>Velocidad</span><input type="range" id="fv" min="30" max="260" value="110"></label>
+      <div class="ro">La luz rebota dentro del hilo de vidrio por <b>reflexión total</b>. Cada pulso es un <b>1</b> y cada pausa un <b>0</b>: así viajan tus videos. El control remoto hace lo mismo… pero con infrarrojo invisible.</div>`;
+    const g = fitCanvas(box.querySelector('canvas'), 150);
+    const bits = '1011001110100101100111010110'.split('');
+    const V = box.querySelector('#fv'); let off = 0, lt = now;
+    return { draw(t){
+      const {x, w, h} = g, mid = h/2, core = 46, gap = 24, dt = t - lt; lt = t;
+      off += dt * +V.value;
+      x.clearRect(0,0,w,h); x.fillStyle = 'rgba(0,0,0,.35)'; x.fillRect(0,0,w,h);
+      x.fillStyle = 'rgba(125,211,252,.08)'; x.fillRect(30, mid-core/2-10, w-60, core+20);
+      x.fillStyle = 'rgba(250,204,21,.07)'; x.fillRect(30, mid-core/2, w-60, core);
+      x.strokeStyle = 'rgba(255,255,255,.25)'; x.strokeRect(30, mid-core/2, w-60, core);
+      const tri = u => { const f = u - Math.floor(u); return f < .5 ? 4*f - 1 : 3 - 4*f; };
+      const yAt = X => mid + tri((X-30)/70) * (core/2 - 3);
+      x.strokeStyle = hexA(col,.15); x.beginPath();
+      for(let X = 30; X <= w-30; X += 2){ X === 30 ? x.moveTo(X, yAt(X)) : x.lineTo(X, yAt(X)); } x.stroke();
+      const span = bits.length * gap, len = w - 60;
+      bits.forEach((b,i) => {
+        const X = 30 + (((off - i*gap) % span) + span) % span;
+        if(X > w - 30) return;
+        if(b === '1'){
+          x.fillStyle = col; x.shadowColor = col; x.shadowBlur = 14;
+          x.beginPath(); x.arc(X, yAt(X), 4.2, 0, 6.283); x.fill(); x.shadowBlur = 0;
+        } else { x.strokeStyle = 'rgba(255,255,255,.18)'; x.beginPath(); x.arc(X, yAt(X), 3, 0, 6.283); x.stroke(); }
+      });
+      x.font = '11px Outfit'; x.fillStyle = 'rgba(255,255,255,.7)';
+      x.fillText('EMISOR', 4, 16); x.textAlign = 'right'; x.fillText('RECEPTOR', w-4, 16); x.textAlign = 'left';
+      const rec = bits.map((b,i) => b).join('');
+      const k = Math.floor(off/gap) % bits.length;
+      x.fillStyle = col; x.font = '12px monospace';
+      x.fillText(rec.slice(0, k+1).slice(-22), 34, h-10);
+    }};
+  },
+
+  /* --- Medicina --- */
+  medicina(box, col){
+    box.innerHTML = `<div class="med">
+      <div class="m"><div class="e">${ico('sun')}</div><b>Ultravioleta</b><span><i>Cura:</i> desinfecta agua y superficies.</span><span><i>Protección:</i> bloqueador solar para la piel.</span></div>
+      <div class="m"><div class="e">${ico('scan')}</div><b>Rayos X</b><span><i>Cura:</i> ver huesos fracturados sin abrir el cuerpo.</span><span><i>Protección:</i> delantales de plomo para los técnicos.</span></div>
+      <div class="m"><div class="e">${ico('burst')}</div><b>Rayos gamma</b><span><i>Cura:</i> radioterapia que destruye células de cáncer.</span><span><i>Protección:</i> dosis controladas por especialistas.</span></div>
+    </div><canvas style="margin-top:10px"></canvas>
+    <label><span>Energía</span><input type="range" id="me" min="0" max="1" step=".01" value=".5"></label>
+    <div class="status" id="mst"></div>`;
+    const g = fitCanvas(box.querySelector('canvas'), 110), E = box.querySelector('#me'), st = box.querySelector('#mst');
+    const upd = () => {
+      const e = +E.value;
+      const [txt, c] = e < .35 ? ['Zona UV: útil para desinfectar, pero quema la piel sin protección.','#a78bfa']
+        : e < .7 ? ['Zona rayos X: atraviesa la piel y muestra los huesos.','#7dd3fc'] : ['Zona gamma: tan intensa que destruye células — por eso cura el cáncer y exige control.','#86efac'];
+      st.textContent = txt; st.style.borderColor = c; st.style.setProperty('--sc', c); st.style.background = hexA(c,.12);
+    };
+    E.oninput = upd; upd();
+    return { draw(t){
+      const {x, w, h} = g, e = +E.value, mid = h/2, wl = 60 - e*52;
+      x.clearRect(0,0,w,h); x.fillStyle = 'rgba(0,0,0,.3)'; x.fillRect(0,0,w,h);
+      // "cuerpo": células que reciben la onda
+      for(let i = 0; i < 9; i++){
+        const cx = w*.62 + (i%3)*34, cy = mid - 30 + Math.floor(i/3)*30;
+        const hit = (Math.sin(t*6 - i) + 1)/2 * e;
+        x.fillStyle = hexA(hit > .6 ? '#f43f5e' : '#34d399', .3 + hit*.5);
+        x.beginPath(); x.arc(cx, cy, 11, 0, 6.283); x.fill();
+      }
+      x.lineWidth = 2; x.strokeStyle = col; x.shadowColor = col; x.shadowBlur = 10*e; x.beginPath();
+      for(let X = 0; X <= w*.58; X++){ const y = mid - Math.sin(X/wl*6.283 - t*(4+e*10))*18; X ? x.lineTo(X,y) : x.moveTo(X,y); }
+      x.stroke(); x.shadowBlur = 0; x.lineWidth = 1;
+      x.font = '11px Outfit'; x.fillStyle = 'rgba(255,255,255,.6)'; x.fillText('onda →', 6, h-8); x.fillText('células', w*.64, h-8);
+    }};
+  },
+
+  /* --- Sonar --- */
+  sonar(box, col){
+    box.innerHTML = `<canvas style="cursor:pointer"></canvas>
+      <label><span>Mover barco</span><input type="range" id="sx" min="0.08" max="0.92" step=".005" value=".5"></label>
+      <button class="big" id="ping">${ico('sonar')}Emitir ping de sonar</button>
+      <div class="ro" id="sr">El sonido viaja en el agua a unos <b>1500 m/s</b>. Mueve el barco y emite un ping.</div>`;
+    const g = fitCanvas(box.querySelector('canvas'), 210);
+    const SX = box.querySelector('#sx'), sr = box.querySelector('#sr');
+    const top = 34, scale = .9;
+    const depthAt = u => 100 + 30*Math.sin(u*9) + 18*Math.sin(u*23 + 1) + 12*Math.sin(u*4 + 2);
+    let ping = null;
+    const fire = () => {
+      const u = +SX.value, d = depthAt(u), rt = 2*d/1500;
+      ping = {u, d, rt, t0: now, dur: .5 + rt*9, done:false};
+      blip(880, .07);
+    };
+    box.querySelector('#ping').onclick = fire;
+    box.querySelector('canvas').onclick = fire;
+    return { draw(t){
+      const {x, w, h} = g, u = +SX.value, sx = u*w;
+      x.clearRect(0,0,w,h);
+      const wg = x.createLinearGradient(0,top,0,h); wg.addColorStop(0,'rgba(14,116,144,.55)'); wg.addColorStop(1,'rgba(3,20,40,.95)');
+      x.fillStyle = 'rgba(2,6,18,.6)'; x.fillRect(0,0,w,top); x.fillStyle = wg; x.fillRect(0,top,w,h-top);
+      x.strokeStyle = 'rgba(125,211,252,.6)'; x.beginPath();
+      for(let X = 0; X <= w; X += 3){ const y = top + Math.sin(X*.05 + t*2)*2; X ? x.lineTo(X,y) : x.moveTo(X,y); } x.stroke();
+      // fondo marino
+      x.fillStyle = '#3b2f1e'; x.beginPath(); x.moveTo(0,h);
+      for(let X = 0; X <= w; X += 3) x.lineTo(X, top + depthAt(X/w)*scale);
+      x.lineTo(w,h); x.closePath(); x.fill();
+      x.strokeStyle = '#a16207'; x.beginPath();
+      for(let X = 0; X <= w; X += 3){ const y = top + depthAt(X/w)*scale; X ? x.lineTo(X,y) : x.moveTo(X,y); } x.stroke();
+      // cardumen de líneas (decorativo)
+      x.strokeStyle = hexA(col, .35); x.lineWidth = 1.4;
+      for(let k = 0; k < 3; k++){
+        const fx = ((t*26 + k*18) % (w+60)) - 30, fy = top + 34 + k*7 + Math.sin(t*2 + k)*4;
+        x.beginPath(); x.moveTo(fx-7, fy); x.quadraticCurveTo(fx, fy-4, fx+7, fy); x.quadraticCurveTo(fx, fy+4, fx-7, fy);
+        x.moveTo(fx-7, fy); x.lineTo(fx-11, fy-3); x.moveTo(fx-7, fy); x.lineTo(fx-11, fy+3); x.stroke();
+      }
+      // barco (vector, mismo estilo de línea)
+      const bob = Math.sin(t*2)*1.5, by0 = top + bob;
+      x.lineWidth = 1.8; x.strokeStyle = col; x.fillStyle = 'rgba(6,14,32,.95)';
+      x.beginPath(); x.moveTo(sx-20, by0-6); x.lineTo(sx+20, by0-6); x.lineTo(sx+14, by0+3); x.lineTo(sx-14, by0+3); x.closePath(); x.fill(); x.stroke();
+      x.beginPath(); x.rect(sx-9, by0-13, 13, 7); x.fill(); x.stroke();
+      x.beginPath(); x.moveTo(sx+8, by0-6); x.lineTo(sx+8, by0-18); x.stroke();
+      x.beginPath(); x.arc(sx+8, by0-18, 3.5, -2.4, -.7); x.stroke();
+      x.lineWidth = 1;
+      if(ping){
+        const p = (t - ping.t0)/ping.dur, by = top + ping.d*scale, psx = ping.u*w, depth = by - top;
+        if(p < 1){
+          const goingDown = p < .5, r = goingDown ? depth*(p*2) : depth*((p-.5)*2);
+          x.strokeStyle = hexA(goingDown ? col : '#facc15', .9); x.lineWidth = 2;
+          for(let k = 0; k < 3; k++){
+            const rr = r - k*8; if(rr <= 0) continue;
+            x.globalAlpha = 1 - k*.3; x.beginPath();
+            if(goingDown) x.arc(psx, top + 6, rr, .3*Math.PI, .7*Math.PI);
+            else x.arc(psx, by, rr, 1.3*Math.PI, 1.7*Math.PI);
+            x.stroke();
+          }
+          x.globalAlpha = 1; x.lineWidth = 1;
+        } else if(!ping.done){
+          ping.done = true;
+          sr.innerHTML = `Ida y vuelta: <b>${ping.rt.toFixed(3)} s</b><br>Profundidad = 1500 m/s × ${ping.rt.toFixed(3)} s ÷ 2 = <b>${ping.d.toFixed(0)} m</b><br><small style="color:var(--muted)">Los murciélagos y delfines hacen este cálculo de forma natural: se llama ecolocalización.</small>`;
+          blip(660, .05);
+        }
+        if(ping.done){
+          x.setLineDash([4,4]); x.strokeStyle = 'rgba(250,204,21,.6)';
+          x.beginPath(); x.moveTo(psx, top+6); x.lineTo(psx, by); x.stroke(); x.setLineDash([]);
+          x.fillStyle = '#facc15'; x.font = '600 12px Outfit'; x.fillText(`${ping.d.toFixed(0)} m`, psx + 6, (top+by)/2);
+        }
+      }
+    }};
+  },
+
+  /* --- Ruido / decibeles --- */
+  ruido(box, col){
+    box.innerHTML = `<canvas id="gauge"></canvas><canvas id="wv" style="margin-top:6px"></canvas>
+      <div class="presets">
+        <button data-v="30">Biblioteca · 30</button><button data-v="35">Aula ideal OMS · 35</button>
+        <button data-v="60">Conversación · 60</button><button data-v="82">Recreo · 80+</button><button data-v="100">Bocina · 100</button>
+      </div>
+      <label><span>Volumen</span><input type="range" id="dv" min="20" max="120" value="60"></label>
+      <button class="big" id="mic">${ico('mic')}Medir el ruido real con mi micrófono</button>
+      <div class="status" id="dst"></div>`;
+    const G = fitCanvas(box.querySelector('#gauge'), 175), Wv = fitCanvas(box.querySelector('#wv'), 60);
+    const D = box.querySelector('#dv'), st = box.querySelector('#dst'), micB = box.querySelector('#mic');
+    let shown = 60, micStream = null, an = null, buf = null, micCtx = null;
+    const status = db => db <= 35 ? ['Ideal para aprender: es lo que recomienda la OMS para un salón de clases.','#34d399']
+      : db <= 60 ? ['Por encima de lo recomendado. Ya cuesta un poco concentrarse.','#a3e635']
+      : db < 80 ? ['Ruidoso: dificulta la concentración y cansa la voz de los docentes.','#facc15']
+      : ['Nivel de recreo o más: dolor de cabeza, estrés y riesgo para tus oídos.','#f43f5e'];
+    box.querySelectorAll('.presets button').forEach(b => b.onclick = () => { D.value = b.dataset.v; });
+    micB.onclick = async () => {
+      if(micStream){ stopMic(); return; }
+      try{
+        micStream = await navigator.mediaDevices.getUserMedia({audio:true});
+        micCtx = new (window.AudioContext || window.webkitAudioContext)();
+        an = micCtx.createAnalyser(); an.fftSize = 2048; buf = new Float32Array(an.fftSize);
+        micCtx.createMediaStreamSource(micStream).connect(an);
+        micB.innerHTML = ico('stop') + 'Detener micrófono'; micB.classList.add('on');
+      }catch(err){ st.textContent = 'No se pudo usar el micrófono (permiso denegado o no disponible).'; micStream = null; }
+    };
+    function stopMic(){
+      if(micStream) micStream.getTracks().forEach(t => t.stop());
+      if(micCtx) micCtx.close();
+      micStream = an = micCtx = null; micB.innerHTML = ico('mic') + 'Medir el ruido real con mi micrófono';
+    }
+    return {
+      stop(){ stopMic(); noiseBoost = 0; },
+      draw(t){
+        let rms = 0;
+        if(an){
+          an.getFloatTimeDomainData(buf);
+          for(let i = 0; i < buf.length; i++) rms += buf[i]*buf[i];
+          rms = Math.sqrt(rms/buf.length);
+          D.value = clamp(20*Math.log10(rms + 1e-7) + 94, 20, 120);   // estimación aproximada (no calibrada)
+        }
+        shown += (+D.value - shown)*.12;
+        const db = shown, [txt, c] = status(db);
+        st.textContent = txt + (an ? '  (medición aproximada, sin calibrar)' : '');
+        st.style.borderColor = c; st.style.setProperty('--sc', c); st.style.background = hexA(c,.12);
+        noiseBoost = clamp((db - 40)/80, 0, 1);
+        // gauge
+        let {x, w, h} = G; const cx = w/2, cy = h - 18, R = Math.min(w/2 - 24, h - 34);
+        x.clearRect(0,0,w,h);
+        const ang = v => Math.PI + (clamp(v,20,120) - 20)/100*Math.PI;
+        [[20,35,'#34d399'],[35,60,'#a3e635'],[60,80,'#facc15'],[80,120,'#f43f5e']].forEach(([a,b,cc]) => {
+          x.strokeStyle = cc; x.globalAlpha = .85; x.lineWidth = 14; x.beginPath(); x.arc(cx,cy,R,ang(a),ang(b)); x.stroke();
+        });
+        x.globalAlpha = 1; x.lineWidth = 1; x.fillStyle = 'rgba(255,255,255,.65)'; x.font = '11px Outfit'; x.textAlign = 'center';
+        [20,35,60,80,100,120].forEach(v => { const a = ang(v); x.fillText(v, cx + Math.cos(a)*(R+18), cy + Math.sin(a)*(R+18) + 4); });
+        const a = ang(db);
+        x.strokeStyle = '#fff'; x.lineWidth = 3; x.shadowColor = c; x.shadowBlur = 14;
+        x.beginPath(); x.moveTo(cx,cy); x.lineTo(cx + Math.cos(a)*(R-10), cy + Math.sin(a)*(R-10)); x.stroke();
+        x.shadowBlur = 0; x.fillStyle = '#fff'; x.beginPath(); x.arc(cx,cy,6,0,6.283); x.fill();
+        x.font = '800 30px Outfit'; x.fillStyle = c; x.fillText(db.toFixed(0) + ' dB', cx, cy - R*.38);
+        x.textAlign = 'left'; x.lineWidth = 1;
+        // onda
+        ({x, w, h} = Wv);
+        x.clearRect(0,0,w,h); x.fillStyle = 'rgba(0,0,0,.3)'; x.fillRect(0,0,w,h);
+        x.strokeStyle = c; x.lineWidth = 1.6; x.beginPath();
+        const amp = Math.pow(10, (db-120)/40) * (h/2 - 4);
+        for(let X = 0; X <= w; X++){
+          let y;
+          if(an){ y = buf[Math.floor(X/w*buf.length)] * (h/2) * 6; }
+          else { const chaos = clamp((db-50)/60, 0, 1); y = (Math.sin(X*.15 - t*12) + chaos*Math.sin(X*.73 + t*31)*.8 + chaos*Math.sin(X*1.9 - t*47)*.5) * amp; }
+          y = h/2 - clamp(y, -h/2+2, h/2-2); X ? x.lineTo(X,y) : x.moveTo(X,y);
+        }
+        x.stroke(); x.lineWidth = 1;
+      }
+    };
+  },
+
+  /* --- Compromiso final --- */
+  compromiso(box, col){
+    const P = ['Hablo en voz baja dentro del salón','Respeto los momentos de silencio','Evito gritar en pasillos y recreo','Uso audífonos a volumen moderado','Cuido mis oídos y los de los demás'];
+    box.innerHTML = `<canvas></canvas><div class="ro" id="cdb"></div>
+      ${P.map((p,i)=>`<label class="pledge"><input type="checkbox" data-i="${i}"> ${p}</label>`).join('')}`;
+    const g = fitCanvas(box.querySelector('canvas'), 110), out = box.querySelector('#cdb');
+    let calm = 0, target = 0;
+    const upd = () => {
+      const n = box.querySelectorAll('.pledge input:checked').length;
+      box.querySelectorAll('.pledge').forEach(l => l.classList.toggle('done', l.querySelector('input').checked));
+      target = n / P.length;
+      const db = Math.round(85 - n*10);
+      out.innerHTML = n === P.length
+        ? `<b>¡Salón en calma!</b> ~${db} dB: justo lo que recomienda la OMS. Esto también es aplicar la física.`
+        : `Ruido estimado del salón: <b>~${db} dB</b>. Marca tus compromisos y mira cómo se calma la onda.`;
+      if(n === P.length){ blip(523,.06); setTimeout(()=>blip(659,.06),120); setTimeout(()=>blip(784,.06),240); }
+    };
+    box.querySelectorAll('.pledge input').forEach(i => i.onchange = upd); upd();
+    return { draw(t){
+      const {x, w, h} = g; calm += (target - calm)*.05;
+      const chaos = 1 - calm, mid = h/2;
+      x.clearRect(0,0,w,h); x.fillStyle = 'rgba(0,0,0,.3)'; x.fillRect(0,0,w,h);
+      const c = calm > .95 ? '#34d399' : chaos > .6 ? '#f472b6' : '#facc15';
+      x.strokeStyle = c; x.lineWidth = 2; x.shadowColor = c; x.shadowBlur = 10; x.beginPath();
+      for(let X = 0; X <= w; X++){
+        const y = mid - (Math.sin(X*.035 - t*1.8)*14
+          + chaos*(Math.sin(X*.21 + t*9)*14 + Math.sin(X*.57 - t*17)*9 + Math.sin(X*1.3 + t*29)*6));
+        X ? x.lineTo(X,y) : x.moveTo(X,y);
+      }
+      x.stroke(); x.shadowBlur = 0; x.lineWidth = 1;
+    }};
+  }
+};
+
+/* =====================================================================
+   CELEBRACIÓN + INICIO
+   ===================================================================== */
+function celebrate(){
+  const cols = BR.map(b => b.c);
+  mains.forEach((m,i) => setTimeout(() => { ripple(m.x, m.y, m.data.c, 420); blip(m.data.hz, .05); }, i*140));
+  setTimeout(() => ripple(0, 0, '#7dd3fc', 900), mains.length*140);
+}
+
+$('#go').onclick = () => {
+  $('#intro').classList.add('gone');
+  setTimeout(() => {
+    ripple(0, 0, '#7dd3fc', 700);
+    mains.forEach((m,i) => setTimeout(() => ripple(m.x, m.y, m.data.c, 200), 300 + i*90));
+  }, 300);
+  setTimeout(() => $('#hint').style.opacity = 0, 12000);
+};
+
+// cámara inicial: empieza lejos y "llega"
+cam.z = fitZ()*.5; tgt.z = fitZ();
+requestAnimationFrame(frame);
+</script>
+</body>
+</html>
